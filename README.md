@@ -341,7 +341,6 @@ declares the closure and unpacks the cascade.
 import 'package:built_value_basic_basic_tutorial/user.dart';
 
 void updates(UserBuilder b) {
-  b = UserBuilder();
   b.name = 'John Smith';
 }
 
@@ -363,3 +362,110 @@ Hooray!
 
 There is something about nested builders, but I don't really care
 too much at the moment... Stay tuned!
+
+# Built Collections for Dart
+## Introduction
+A bonus topic of sorts based on [this article](https://medium.com/dartlang/darts-built-collection-for-immutable-collections-db662f705eff?)
+again by David Morgan about the
+[Built Collections](https://pub.dev/packages/built_collection)
+library.
+We can also generate immutable collections using the
+builder pattern. Each of the [core SDK collections](https://api.dartlang.org/stable/2.7.0/dart-core/dart-core-library.html#collections)
+are split in two:
+* **mutable** builder class
+* **immutable** "built" class
+
+We compute with builders and share the built classes. As you
+might have guessed, immutable collections work well with
+the immutable values we create with `built_value`.
+
+## Article
+We need to install `built_collection`.
+`pubspec.yaml`
+```yaml
+dev_dependencies:
+  built_collection: ^4.3.0
+```
+
+Let's see it in action!
+
+`main.dart`
+```dart
+import 'package:built_collection/built_collection.dart';
+
+void main() {
+  var list = new BuiltList<int>([1, 2, 3]);
+  print(list);
+}
+```
+
+Suppose we want to add a value to it.
+
+We need to actually create a new list due to immutability.
+
+`main.dart`
+```dart
+  var builder = list.toBuilder();
+  builder.add(4);
+  var newList = builder.build();
+
+  print(newList);
+```
+
+We can use cascade notation to shorten this:
+`main.dart`
+```dart
+  var newList = (list.toBuilder()..add(4)).build();
+```
+
+But wait! We can do even better by using
+[anonymous functions](https://dart.dev/guides/language/language-tour#anonymous-functions):
+
+`main.dart`
+```dart
+  var newList = list.rebuild((b) => b.add(4));
+```
+
+We can use [method cascading](https://en.wikipedia.org/wiki/Method_cascading)
+to do more complicated things:
+
+`main.dart`
+```dart
+  var newList = list.rebuild((b) => b
+    ..add(4)
+    ..addAll([7, 6, 5])
+    ..sort()
+    ..remove(1));
+  print(newList);
+```
+
+For those of you unfamiliar with method cascading (I am),
+this is equivalent to:
+
+`main.dart`
+```dart
+  var newListVerbose = list.rebuild((b) {
+    b.add(4);
+    b.addAll([7, 6, 5]);
+    b.sort();
+    b.remove(1);
+  });
+  print(newListVerbose);
+```
+
+And if the `rebuild` function is new to you (which it is
+for me), we can go
+even more verbose:
+
+`main.dart`
+```dart
+  var builder = list.toBuilder();
+  builder.add(4);
+  builder.addAll([7, 6, 5]);
+  builder.sort();
+  builder.remove(1);
+  var newListEvenMoreVerbose = builder.build();
+  print(newListEvenMoreVerbose);
+```
+
+That's it! What a nice and convenient API.
